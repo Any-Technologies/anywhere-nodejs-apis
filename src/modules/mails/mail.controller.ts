@@ -9,7 +9,7 @@ export class MailController {
     constructor() { }
 
     async sendMail(req: Request, res: Response) {
-        const { from, to, subject, text } = req.body;
+        const { to, subject, text } = req.body;
 
         try {
             const transporter = nodemailer.createTransport({
@@ -23,7 +23,7 @@ export class MailController {
             });
 
             const mailOptions = {
-                from: from,
+                from: "admin@anytechnologies",
                 to: to,
                 subject: subject,
                 text: text,
