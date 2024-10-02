@@ -23,7 +23,7 @@ export class MailController {
             });
 
             const mailOptions = {
-                from: "admin@anytechnologies",
+                from: "admin@anytechnologies.in",
                 to: to,
                 subject: subject,
                 text: text,
