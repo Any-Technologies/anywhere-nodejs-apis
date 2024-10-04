@@ -14,6 +14,9 @@ export class UserRoute {
     }
 
     registerRoutes(): void {
+        this.router.get("/profile", async (req: Request, res: Response) => {
+            await this.userController.getProfile(req, res);
+        });
         this.router.post("/create", async (req: Request, res: Response) => {
             await this.userController.createUser(req, res);
         });

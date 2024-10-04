@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { Request, Response } from "express";
 import { conn } from "./configs/database.config";
 import { MailRoute } from "./modules/mails/mail.route";
 import { UserRoute } from "./modules/users/user.route";
@@ -17,6 +18,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use("/mail", new MailRoute().getRoutes());
 app.use("/user", new UserRoute().getRoutes());
+
+app.get("/", (req: Request, res: Response) => {
+    res.status(200).json({ message: "Hello World!", status: 200 });
+});
 
 (async () => {
     try {

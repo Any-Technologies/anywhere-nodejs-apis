@@ -76,4 +76,56 @@ export class UserController {
             }
         }
     };
+
+    async getProfile(req: Request, res: Response) {
+        const { userId } = req.query;
+        if (!userId || typeof userId !== "string") {
+            return res.status(400).json({
+                message: "An unexpected error occurred",
+                status: 400,
+            });
+        }
+        const transaction = await sequelize.transaction();
+        try {
+            const user = await Users.findOne({
+                where: {
+                    user_id: userId,
+                    is_active: true,
+                },
+                transaction,
+            });
+            if (!user) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    message: "User not found",
+                    status: 404,
+                });
+            }
+            const userData = {
+                userId: user?.user_id,
+                username: user?.username,
+                fullName: user?.full_name,
+                email: user?.email,
+                gender: user?.gender,
+                dateOfBirth: user?.date_of_birth,
+                bio: user.bio,
+                preferences: user?.preferences,
+                profilePhoto: user?.profile_photo
+            };
+            await transaction.commit();
+            return res.status(200).json({
+                message: "User profile fetched successfully",
+                data: userData,
+                status: 200,
+            });
+        } catch (error) {
+            console.log(error);
+            await transaction.rollback();
+            return res.status(400).json({
+                message: "Error fetching user profile",
+                status: 400,
+            });
+        }
+    };
+
 }
