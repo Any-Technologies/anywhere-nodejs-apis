@@ -4,8 +4,8 @@ import { MailController } from "./mail.controller";
 
 export class MailRoute {
 
-    private router: Router;
-    private mailController: MailController;
+    private router!: Router;
+    private mailController!: MailController;
 
     constructor() {
         this.router = Router();

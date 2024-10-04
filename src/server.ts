@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { conn } from "./configs/database.config";
 import { MailRoute } from "./modules/mails/mail.route";
+import { UserRoute } from "./modules/users/user.route";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use("/mail", new MailRoute().getRoutes());
+app.use("/user", new UserRoute().getRoutes());
 
 (async () => {
     try {
