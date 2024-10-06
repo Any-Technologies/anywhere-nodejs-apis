@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import { sequelize } from "../../configs/database.config";
 import Users from "../../models/users/users.model";
 import { CreateUserSchema } from "../../schemas/users/create-user.schema";
+import { LoginUserSchema } from "../../schemas/users/login-user.schema";
+import { generateAccessToken } from "../../utils/jwt.util";
 
 dotenv.config();
 
@@ -14,9 +16,11 @@ export class UserController {
 
     async createUser(req: Request, res: Response) {
         const transaction = await sequelize.transaction();
+
         try {
             const validatedRequestBody = CreateUserSchema.parse(req.body);
             const { username, fullName, email } = validatedRequestBody;
+
             const existingUserByUsername = await Users.findOne({
                 where: {
                     username: username,
@@ -24,6 +28,7 @@ export class UserController {
                 },
                 transaction,
             });
+
             if (existingUserByUsername) {
                 await transaction.rollback();
                 return res.status(409).json({
@@ -31,6 +36,7 @@ export class UserController {
                     status: 409,
                 });
             }
+
             const existingUserByEmail = await Users.findOne({
                 where: {
                     email: email,
@@ -38,6 +44,7 @@ export class UserController {
                 },
                 transaction,
             });
+
             if (existingUserByEmail) {
                 await transaction.rollback();
                 return res.status(409).json({
@@ -68,17 +75,17 @@ export class UserController {
                     message: error.errors,
                     status: 400,
                 });
-            } else {
-                return res.status(400).json({
-                    message: "Error creating user",
-                    status: 400,
-                });
             }
+            return res.status(400).json({
+                message: "Error creating user",
+                status: 400,
+            });
         }
     };
 
     async getProfile(req: Request, res: Response) {
-        const { userId } = req.query;
+        const { userId } = req.user as { userId: string };
+
         if (!userId || typeof userId !== "string") {
             return res.status(400).json({
                 message: "An unexpected error occurred",
@@ -86,6 +93,7 @@ export class UserController {
             });
         }
         const transaction = await sequelize.transaction();
+
         try {
             const user = await Users.findOne({
                 where: {
@@ -94,6 +102,7 @@ export class UserController {
                 },
                 transaction,
             });
+
             if (!user) {
                 await transaction.rollback();
                 return res.status(404).json({
@@ -101,6 +110,7 @@ export class UserController {
                     status: 404,
                 });
             }
+
             const userData = {
                 userId: user?.user_id,
                 username: user?.username,
@@ -128,4 +138,53 @@ export class UserController {
         }
     };
 
+    async loginUser(req: Request, res: Response) {
+        const transaction = await sequelize.transaction();
+
+        try {
+            const validatedRequestBody = LoginUserSchema.parse(req.body);
+            const { email } = validatedRequestBody;
+
+            const existingEmail = await Users.findOne({
+                where: {
+                    email: email,
+                    is_active: true,
+                },
+                transaction,
+            });
+
+            if (!existingEmail) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    message: "Email doesn't exist",
+                    status: 404,
+                });
+            }
+
+            const userData = { userId: existingEmail.user_id }
+            const accessToken = generateAccessToken(userData);
+            await transaction.commit();
+            return res.status(200).json({
+                message: "User logged in successfully",
+                data: {
+                    accessToken: accessToken,
+                    tokenType: "Bearer"
+                },
+                status: 200,
+            });
+        } catch (error) {
+            console.log(error);
+            await transaction.rollback();
+            if (error instanceof ZodError) {
+                return res.status(400).json({
+                    message: error.errors,
+                    status: 400,
+                });
+            }
+            return res.status(400).json({
+                message: "Error login user",
+                status: 400,
+            });
+        }
+    }
 }
