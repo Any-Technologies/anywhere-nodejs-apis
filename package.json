@@ -1,7 +1,7 @@
 {
   "name": "anywhere-nodejs-apis",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./src/server.ts",
   "scripts": {
     "dev": "nodemon"
   },
